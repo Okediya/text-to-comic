@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to Comic Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        #comic-canvas {
+            background-color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+        <h1 class="text-2xl font-bold text-center text-gray-800 mb-4">Text to Comic Converter</h1>
+        <textarea id="text-input" class="w-full h-32 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" placeholder="Enter your text here (max 200 characters)..." maxlength="200"></textarea>
+        <div class="flex justify-between mt-4">
+            <button id="generate-btn" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200">Generate Comic</button>
+            <button id="download-btn" class="bg-green-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-600 transition duration-200" disabled>Download Comic</button>
+        </div>
+    </div>
+    <canvas id="comic-canvas" width="400" height="400" class="mt-6 rounded-lg shadow-lg"></canvas>
+
+    <script>
+        const canvas = document.getElementById('comic-canvas');
+        const ctx = canvas.getContext('2d');
+        const textInput = document.getElementById('text-input');
+        const generateBtn = document.getElementById('generate-btn');
+        const downloadBtn = document.getElementById('download-btn');
+
+        function drawComic(text) {
+            // Clear canvas
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw simple character (a stick figure)
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.arc(200, 320, 30, 0, Math.PI * 2); // Head
+            ctx.fill();
+            ctx.fillRect(195, 350, 10, 50); // Body
+            ctx.fillRect(170, 350, 20, 5); // Left arm
+            ctx.fillRect(210, 350, 20, 5); // Right arm
+            ctx.fillRect(190, 400, 5, 20); // Left leg
+            ctx.fillRect(205, 400, 5, 20); // Right leg
+
+            // Draw eyes
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(190, 315, 5, 0, Math.PI * 2); // Left eye
+            ctx.arc(210, 315, 5, 0, Math.PI * 2); // Right eye
+            ctx.fill();
+            ctx.fillStyle = 'black';
+            ctx.beginPath();
+            ctx.arc(190, 315, 2, 0, Math.PI * 2); // Left pupil
+            ctx.arc(210, 315, 2, 0, Math.PI * 2); // Right pupil
+            ctx.fill();
+
+            // Draw speech bubble
+            if (text.trim() !== '') {
+                ctx.fillStyle = 'white';
+                ctx.strokeStyle = 'black';
+                ctx.lineWidth = 2;
+                const bubbleWidth = 200;
+                const bubbleHeight = 100;
+                const bubbleX = 100;
+                const bubbleY = 100;
+                ctx.beginPath();
+                ctx.moveTo(bubbleX + 20, bubbleY);
+                ctx.lineTo(bubbleX + bubbleWidth - 20, bubbleY);
+                ctx.quadraticCurveTo(bubbleX + bubbleWidth, bubbleY, bubbleX + bubbleWidth, bubbleY + 20);
+                ctx.lineTo(bubbleX + bubbleWidth, bubbleY + bubbleHeight - 20);
+                ctx.quadraticCurveTo(bubbleX + bubbleWidth, bubbleY + bubbleHeight, bubbleX + bubbleWidth - 20, bubbleY + bubbleHeight);
+                ctx.lineTo(bubbleX + 20, bubbleY + bubbleHeight);
+                ctx.quadraticCurveTo(bubbleX, bubbleY + bubbleHeight, bubbleX, bubbleY + bubbleHeight - 20);
+                ctx.lineTo(bubbleX, bubbleY + 20);
+                ctx.quadraticCurveTo(bubbleX, bubbleY, bubbleX + 20, bubbleY);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Draw connector to mouth
+                ctx.beginPath();
+                ctx.moveTo(bubbleX + 50, bubbleY + bubbleHeight);
+                ctx.lineTo(200, 290);
+                ctx.stroke();
+
+                // Draw text
+                ctx.fillStyle = 'black';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                wrapText(ctx, text, bubbleX + bubbleWidth / 2, bubbleY + 30, bubbleWidth - 20, 20);
+
+                // Enable download button
+                downloadBtn.disabled = false;
+            } else {
+                downloadBtn.disabled = true;
+            }
+        }
+
+        function wrapText(context, text, x, y, maxWidth, lineHeight) {
+            const words = text.split(' ');
+            let line = '';
+            let lines = [];
+
+            for (let n = 0; n < words.length; n++) {
+                const testLine = line + words[n] + ' ';
+                const metrics = context.measureText(testLine);
+                const testWidth = metrics.width;
+                if (testWidth > maxWidth && n > 0) {
+                    lines.push(line);
+                    line = words[n] + ' ';
+                } else {
+                    line = testLine;
+                }
+            }
+            lines.push(line);
+
+            for (let i = 0; i < lines.length; i++) {
+                context.fillText(lines[i], x, y + (i * lineHeight));
+            }
+        }
+
+        // Download comic as PNG
+        function downloadComic() {
+            const link = document.createElement('a');
+            link.download = 'comic.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Initial draw
+        drawComic('');
+
+        // Event listeners
+        generateBtn.addEventListener('click', () => {
+            const text = textInput.value;
+            drawComic(text);
+        });
+
+        downloadBtn.addEventListener('click', downloadComic);
+
+        // Real-time text input update
+        textInput.addEventListener('input', () => {
+            const text = textInput.value;
+            drawComic(text);
+        });
+    </script>
+</body>
+</html>
