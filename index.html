@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         #comic-canvas {
-            background-color: white;
             width: 100%;
             height: auto;
             aspect-ratio: 16 / 9; /* Maintain YouTube thumbnail aspect ratio */
@@ -65,6 +64,15 @@
                     <option value="classic">Classic Cartoon</option>
                 </select>
             </div>
+            <div class="mt-4">
+                <label for="wallpaper-select" class="block text-sm font-medium text-gray-700">Wallpaper:</label>
+                <select id="wallpaper-select" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="plain">Plain White</option>
+                    <option value="gradient">Blue Gradient</option>
+                    <option value="cityscape">Cityscape</option>
+                    <option value="nature">Nature</option>
+                </select>
+            </div>
             <div class="flex justify-between mt-4">
                 <button id="generate-btn" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200">Generate Comic</button>
                 <button id="download-btn" class="bg-green-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-600 transition duration-200" disabled>Download Comic</button>
@@ -82,11 +90,43 @@
         const generateBtn = document.getElementById('generate-btn');
         const downloadBtn = document.getElementById('download-btn');
         const styleSelect = document.getElementById('style-select');
+        const wallpaperSelect = document.getElementById('wallpaper-select');
 
-        function drawComic(text, style) {
-            // Clear canvas
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        function drawComic(text, style, wallpaper) {
+            // Draw wallpaper
+            if (wallpaper === 'plain') {
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else if (wallpaper === 'gradient') {
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#4b6cb7');
+                gradient.addColorStop(1, '#182848');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else if (wallpaper === 'cityscape') {
+                ctx.fillStyle = '#87ceeb'; // Sky
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#4b4b4b'; // Buildings
+                ctx.fillRect(50, 200, 100, 160);
+                ctx.fillRect(170, 150, 80, 210);
+                ctx.fillRect(270, 180, 120, 180);
+                ctx.fillStyle = 'yellow'; // Windows
+                for (let x = 60; x < 140; x += 20) {
+                    for (let y = 220; y < 340; y += 20) {
+                        ctx.fillRect(x, y, 10, 10);
+                    }
+                }
+            } else if (wallpaper === 'nature') {
+                ctx.fillStyle = '#228b22'; // Ground
+                ctx.fillRect(0, 180, canvas.width, canvas.height);
+                ctx.fillStyle = '#87ceeb'; // Sky
+                ctx.fillRect(0, 0, canvas.width, 180);
+                ctx.fillStyle = '#006400'; // Tree
+                ctx.beginPath();
+                ctx.arc(100, 150, 30, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillRect(95, 180, 10, 30);
+            }
 
             // Draw speech bubble
             if (text.trim() !== '') {
@@ -286,25 +326,35 @@
         }
 
         // Initial draw
-        drawComic('', 'stick');
+        drawComic('', 'stick', 'plain');
 
         // Event listeners
         generateBtn.addEventListener('click', () => {
             const text = textInput.value;
             const style = styleSelect.value;
-            drawComic(text, style);
+            const wallpaper = wallpaperSelect.value;
+            drawComic(text, style, wallpaper);
         });
 
         styleSelect.addEventListener('change', () => {
             const text = textInput.value;
             const style = styleSelect.value;
-            drawComic(text, style);
+            const wallpaper = wallpaperSelect.value;
+            drawComic(text, style, wallpaper);
+        });
+
+        wallpaperSelect.addEventListener('change', () => {
+            const text = textInput.value;
+            const style = styleSelect.value;
+            const wallpaper = wallpaperSelect.value;
+            drawComic(text, style, wallpaper);
         });
 
         textInput.addEventListener('input', () => {
             const text = textInput.value;
             const style = styleSelect.value;
-            drawComic(text, style);
+            const wallpaper = wallpaperSelect.value;
+            drawComic(text, style, wallpaper);
         });
 
         downloadBtn.addEventListener('click', downloadComic);
