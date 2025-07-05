@@ -8,28 +8,72 @@
     <style>
         #comic-canvas {
             background-color: white;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 16 / 9; /* Maintain YouTube thumbnail aspect ratio */
+            max-width: 640px; /* Maximum width to prevent over-scaling */
+            max-height: 360px; /* Maximum height to prevent over-scaling */
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            align-items: center;
+            max-width: 100vw; /* Ensure container fits within viewport width */
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+        .tool-div {
+            flex: 1;
+            min-width: 300px;
+            max-width: 400px;
+        }
+        .comic-div {
+            flex: 1;
+            min-width: 300px;
+            max-width: 640px; /* Match canvas max-width */
+            display: flex;
+            justify-content: center;
+        }
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .tool-div, .comic-div {
+                max-width: 100%;
+            }
+            #comic-canvas {
+                max-width: 100%;
+                max-height: calc(100vw * 9 / 16); /* Maintain aspect ratio on smaller screens */
+            }
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
-    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-        <h1 class="text-2xl font-bold text-center text-gray-800 mb-4">Text to Comic Converter</h1>
-        <textarea id="text-input" class="w-full h-32 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" placeholder="Enter your text here (max 200 characters)..." maxlength="200"></textarea>
-        <div class="mt-4">
-            <label for="style-select" class="block text-sm font-medium text-gray-700">Comic Style:</label>
-            <select id="style-select" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="stick">Stick Figure</option>
-                <option value="manga">Manga</option>
-                <option value="chibi">Chibi</option>
-                <option value="classic">Classic Cartoon</option>
-            </select>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4 sm:p-6">
+    <div class="container">
+        <div class="tool-div bg-white rounded-lg shadow-lg p-6">
+            <h1 class="text-2xl font-bold text-center text-gray-800 mb-4">Text to Comic Converter</h1>
+            <textarea id="text-input" class="w-full h-32 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" placeholder="Enter your text here (max 200 characters)..." maxlength="200"></textarea>
+            <div class="mt-4">
+                <label for="style-select" class="block text-sm font-medium text-gray-700">Comic Style:</label>
+                <select id="style-select" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="stick">Stick Figure</option>
+                    <option value="manga">Manga</option>
+                    <option value="chibi">Chibi</option>
+                    <option value="classic">Classic Cartoon</option>
+                </select>
+            </div>
+            <div class="flex justify-between mt-4">
+                <button id="generate-btn" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200">Generate Comic</button>
+                <button id="download-btn" class="bg-green-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-600 transition duration-200" disabled>Download Comic</button>
+            </div>
         </div>
-        <div class="flex justify-between mt-4">
-            <button id="generate-btn" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200">Generate Comic</button>
-            <button id="download-btn" class="bg-green-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-600 transition duration-200" disabled>Download Comic</button>
+        <div class="comic-div">
+            <canvas id="comic-canvas" width="640" height="360" class="rounded-lg shadow-lg"></canvas>
         </div>
     </div>
-    <canvas id="comic-canvas" width="640" height="360" class="mt-6 rounded-lg shadow-lg"></canvas>
 
     <script>
         const canvas = document.getElementById('comic-canvas');
