@@ -15,12 +15,21 @@
     <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
         <h1 class="text-2xl font-bold text-center text-gray-800 mb-4">Text to Comic Converter</h1>
         <textarea id="text-input" class="w-full h-32 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" placeholder="Enter your text here (max 200 characters)..." maxlength="200"></textarea>
+        <div class="mt-4">
+            <label for="style-select" class="block text-sm font-medium text-gray-700">Comic Style:</label>
+            <select id="style-select" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="stick">Stick Figure</option>
+                <option value="manga">Manga</option>
+                <option value="chibi">Chibi</option>
+                <option value="classic">Classic Cartoon</option>
+            </select>
+        </div>
         <div class="flex justify-between mt-4">
             <button id="generate-btn" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200">Generate Comic</button>
             <button id="download-btn" class="bg-green-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-600 transition duration-200" disabled>Download Comic</button>
         </div>
     </div>
-    <canvas id="comic-canvas" width="400" height="400" class="mt-6 rounded-lg shadow-lg"></canvas>
+    <canvas id="comic-canvas" width="640" height="360" class="mt-6 rounded-lg shadow-lg"></canvas>
 
     <script>
         const canvas = document.getElementById('comic-canvas');
@@ -28,44 +37,22 @@
         const textInput = document.getElementById('text-input');
         const generateBtn = document.getElementById('generate-btn');
         const downloadBtn = document.getElementById('download-btn');
+        const styleSelect = document.getElementById('style-select');
 
-        function drawComic(text) {
+        function drawComic(text, style) {
             // Clear canvas
             ctx.fillStyle = 'white';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Draw simple character (a stick figure)
-            ctx.fillStyle = '#333';
-            ctx.beginPath();
-            ctx.arc(200, 320, 30, 0, Math.PI * 2); // Head
-            ctx.fill();
-            ctx.fillRect(195, 350, 10, 50); // Body
-            ctx.fillRect(170, 350, 20, 5); // Left arm
-            ctx.fillRect(210, 350, 20, 5); // Right arm
-            ctx.fillRect(190, 400, 5, 20); // Left leg
-            ctx.fillRect(205, 400, 5, 20); // Right leg
-
-            // Draw eyes
-            ctx.fillStyle = 'white';
-            ctx.beginPath();
-            ctx.arc(190, 315, 5, 0, Math.PI * 2); // Left eye
-            ctx.arc(210, 315, 5, 0, Math.PI * 2); // Right eye
-            ctx.fill();
-            ctx.fillStyle = 'black';
-            ctx.beginPath();
-            ctx.arc(190, 315, 2, 0, Math.PI * 2); // Left pupil
-            ctx.arc(210, 315, 2, 0, Math.PI * 2); // Right pupil
-            ctx.fill();
 
             // Draw speech bubble
             if (text.trim() !== '') {
                 ctx.fillStyle = 'white';
                 ctx.strokeStyle = 'black';
                 ctx.lineWidth = 2;
-                const bubbleWidth = 200;
-                const bubbleHeight = 100;
-                const bubbleX = 100;
-                const bubbleY = 100;
+                const bubbleWidth = 400;
+                const bubbleHeight = 120;
+                const bubbleX = 120;
+                const bubbleY = 60;
                 ctx.beginPath();
                 ctx.moveTo(bubbleX + 20, bubbleY);
                 ctx.lineTo(bubbleX + bubbleWidth - 20, bubbleY);
@@ -80,22 +67,146 @@
                 ctx.fill();
                 ctx.stroke();
 
+                // Draw text
+                ctx.fillStyle = 'black';
+                ctx.font = style === 'manga' ? '20px "Comic Sans MS", Arial' : '16px Arial';
+                ctx.textAlign = 'center';
+                wrapText(ctx, text, bubbleX + bubbleWidth / 2, bubbleY + 30, bubbleWidth - 20, 20);
+
                 // Draw connector to mouth
                 ctx.beginPath();
                 ctx.moveTo(bubbleX + 50, bubbleY + bubbleHeight);
-                ctx.lineTo(200, 290);
+                ctx.lineTo(320, 240);
                 ctx.stroke();
-
-                // Draw text
-                ctx.fillStyle = 'black';
-                ctx.font = '16px Arial';
-                ctx.textAlign = 'center';
-                wrapText(ctx, text, bubbleX + bubbleWidth / 2, bubbleY + 30, bubbleWidth - 20, 20);
 
                 // Enable download button
                 downloadBtn.disabled = false;
             } else {
                 downloadBtn.disabled = true;
+            }
+
+            // Draw character based on style
+            if (style === 'stick') {
+                // Stick figure
+                ctx.fillStyle = '#333';
+                ctx.beginPath();
+                ctx.arc(320, 300, 30, 0, Math.PI * 2); // Head
+                ctx.fill();
+                ctx.fillRect(315, 330, 10, 50); // Body
+                ctx.fillRect(290, 330, 20, 5); // Left arm
+                ctx.fillRect(330, 330, 20, 5); // Right arm
+                ctx.fillRect(310, 380, 5, 20); // Left leg
+                ctx.fillRect(325, 380, 5, 20); // Right leg
+
+                // Draw eyes
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(310, 295, 5, 0, Math.PI * 2); // Left eye
+                ctx.arc(330, 295, 5, 0, Math.PI * 2); // Right eye
+                ctx.fill();
+                ctx.fillStyle = 'black';
+                ctx.beginPath();
+                ctx.arc(310, 295, 2, 0, Math.PI * 2); // Left pupil
+                ctx.arc(330, 295, 2, 0, Math.PI * 2); // Right pupil
+                ctx.fill();
+            } else if (style === 'manga') {
+                // Manga style character
+                ctx.fillStyle = '#333';
+                ctx.beginPath();
+                ctx.arc(320, 300, 40, 0, Math.PI * 2); // Larger head
+                ctx.fill();
+                ctx.fillRect(315, 340, 10, 40); // Smaller body
+                ctx.fillRect(290, 340, 20, 5); // Left arm
+                ctx.fillRect(330, 340, 20, 5); // Right arm
+                ctx.fillRect(310, 380, 5, 15); // Left leg
+                ctx.fillRect(325, 380, 5, 15); // Right leg
+
+                // Draw manga eyes
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.ellipse(310, 295, 10, 15, 0, 0, Math.PI * 2); // Left eye
+                ctx.ellipse(330, 295, 10, 15, 0, 0, Math.PI * 2); // Right eye
+                ctx.fill();
+                ctx.fillStyle = 'black';
+                ctx.beginPath();
+                ctx.arc(310, 295, 5, 0, Math.PI * 2); // Left pupil
+                ctx.arc(330, 295, 5, 0, Math.PI * 2); // Right pupil
+                ctx.fill();
+
+                // Draw spiky hair
+                ctx.fillStyle = '#333';
+                ctx.beginPath();
+                ctx.moveTo(300, 260);
+                ctx.lineTo(320, 240);
+                ctx.lineTo(340, 260);
+                ctx.lineTo(330, 250);
+                ctx.lineTo(320, 260);
+                ctx.lineTo(310, 250);
+                ctx.closePath();
+                ctx.fill();
+            } else if (style === 'chibi') {
+                // Chibi style character
+                ctx.fillStyle = '#333';
+                ctx.beginPath();
+                ctx.arc(320, 280, 50, 0, Math.PI * 2); // Large head
+                ctx.fill();
+                ctx.fillRect(315, 330, 10, 30); // Tiny body
+                ctx.fillRect(300, 330, 15, 5); // Left arm
+                ctx.fillRect(325, 330, 15, 5); // Right arm
+                ctx.fillRect(310, 360, 5, 10); // Left leg
+                ctx.fillRect(325, 360, 5, 10); // Right leg
+
+                // Draw big chibi eyes
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(305, 270, 10, 0, Math.PI * 2); // Left eye
+                ctx.arc(335, 270, 10, 0, Math.PI * 2); // Right eye
+                ctx.fill();
+                ctx.fillStyle = 'black';
+                ctx.beginPath();
+                ctx.arc(305, 270, 5, 0, Math.PI * 2); // Left pupil
+                ctx.arc(335, 270, 5, 0, Math.PI * 2); // Right pupil
+                ctx.fill();
+
+                // Draw small bow
+                ctx.fillStyle = 'red';
+                ctx.beginPath();
+                ctx.moveTo(320, 230);
+                ctx.lineTo(330, 240);
+                ctx.lineTo(320, 250);
+                ctx.lineTo(310, 240);
+                ctx.closePath();
+                ctx.fill();
+            } else if (style === 'classic') {
+                // Classic cartoon style character
+                ctx.fillStyle = '#333';
+                ctx.beginPath();
+                ctx.ellipse(320, 300, 40, 50, 0, 0, Math.PI * 2); // Oval head
+                ctx.fill();
+                ctx.fillRect(315, 350, 10, 50); // Body
+                ctx.fillRect(290, 350, 20, 5); // Left arm
+                ctx.fillRect(330, 350, 20, 5); // Right arm
+                ctx.fillRect(310, 400, 5, 20); // Left leg
+                ctx.fillRect(325, 400, 5, 20); // Right leg
+
+                // Draw cartoon eyes
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(310, 290, 8, 0, Math.PI * 2); // Left eye
+                ctx.arc(330, 290, 8, 0, Math.PI * 2); // Right eye
+                ctx.fill();
+                ctx.fillStyle = 'black';
+                ctx.beginPath();
+                ctx.arc(310, 290, 3, 0, Math.PI * 2); // Left pupil
+                ctx.arc(330, 290, 3, 0, Math.PI * 2); // Right pupil
+                ctx.fill();
+
+                // Draw hat
+                ctx.fillStyle = 'blue';
+                ctx.beginPath();
+                ctx.arc(320, 250, 30, Math.PI, 0); // Hat brim
+                ctx.fill();
+                ctx.fillRect(310, 230, 20, 20); // Hat top
             }
         }
 
@@ -131,21 +242,28 @@
         }
 
         // Initial draw
-        drawComic('');
+        drawComic('', 'stick');
 
         // Event listeners
         generateBtn.addEventListener('click', () => {
             const text = textInput.value;
-            drawComic(text);
+            const style = styleSelect.value;
+            drawComic(text, style);
+        });
+
+        styleSelect.addEventListener('change', () => {
+            const text = textInput.value;
+            const style = styleSelect.value;
+            drawComic(text, style);
+        });
+
+        textInput.addEventListener('input', () => {
+            const text = textInput.value;
+            const style = styleSelect.value;
+            drawComic(text, style);
         });
 
         downloadBtn.addEventListener('click', downloadComic);
-
-        // Real-time text input update
-        textInput.addEventListener('input', () => {
-            const text = textInput.value;
-            drawComic(text);
-        });
     </script>
 </body>
 </html>
