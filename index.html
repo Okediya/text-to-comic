@@ -54,7 +54,7 @@
     <div class="container">
         <div class="tool-div bg-white rounded-lg shadow-lg p-6">
             <h1 class="text-2xl font-bold text-center text-gray-800 mb-4">Text to Comic Converter</h1>
-            <textarea id="text-input" class="w-full h-32 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" placeholder="Enter your text here (max 200 characters)..." maxlength="200"></textarea>
+            <textarea id="text-input" class="w-full h-32 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" placeholder="Enter your text here (max 200 characters)..." maxlength="135"></textarea>
             <div class="mt-4">
                 <label for="style-select" class="block text-sm font-medium text-gray-700">Comic Style:</label>
                 <select id="style-select" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -135,7 +135,7 @@
                 ctx.lineWidth = 2;
                 const bubbleWidth = 400;
                 const bubbleHeight = 120;
-                const bubbleX = 120;
+                const bubbleX = 150;
                 const bubbleY = 60;
                 ctx.beginPath();
                 ctx.moveTo(bubbleX + 20, bubbleY);
@@ -153,7 +153,7 @@
 
                 // Draw text
                 ctx.fillStyle = 'black';
-                ctx.font = style === 'manga' ? '20px "Comic Sans MS", Arial' : '16px Arial';
+                ctx.font = style === 'manga' ? '25px "Comic Sans MS", Arial' : '25px Arial';
                 ctx.textAlign = 'center';
                 wrapText(ctx, text, bubbleX + bubbleWidth / 2, bubbleY + 30, bubbleWidth - 20, 20);
 
@@ -294,28 +294,69 @@
             }
         }
 
-        function wrapText(context, text, x, y, maxWidth, lineHeight) {
-            const words = text.split(' ');
-            let line = '';
-            let lines = [];
+       function wrapText(context, text, x, y, maxWidth, lineHeight, maxHeight = Infinity) {
+    const words = text.split(' ');
+    let line = '';
+    let lines = [];
+    let maxLineWidth = 0;
 
-            for (let n = 0; n < words.length; n++) {
-                const testLine = line + words[n] + ' ';
-                const metrics = context.measureText(testLine);
-                const testWidth = metrics.width;
-                if (testWidth > maxWidth && n > 0) {
-                    lines.push(line);
-                    line = words[n] + ' ';
+    // Split text into lines
+    for (let n = 0; n < words.length; n++) {
+        let word = words[n];
+        let testLine = line + word + ' ';
+        let metrics = context.measureText(testLine);
+        let testWidth = metrics.width;
+
+        // Handle words longer than maxWidth
+        if (context.measureText(word).width > maxWidth) {
+            let chars = word.split('');
+            let tempWord = '';
+            for (let c = 0; c < chars.length; c++) {
+                let testWord = tempWord + chars[c];
+                if (context.measureText(testWord).width > maxWidth) {
+                    if (tempWord) {
+                        lines.push(line + tempWord);
+                        maxLineWidth = Math.max(maxLineWidth, context.measureText(line + tempWord).width);
+                        line = '';
+                        tempWord = chars[c];
+                    }
                 } else {
-                    line = testLine;
+                    tempWord = testWord;
                 }
             }
-            lines.push(line);
-
-            for (let i = 0; i < lines.length; i++) {
-                context.fillText(lines[i], x, y + (i * lineHeight));
-            }
+            line = tempWord + ' ';
+        } else if (testWidth > maxWidth && line.trim() !== '') {
+            lines.push(line.trim());
+            maxLineWidth = Math.max(maxLineWidth, context.measureText(line.trim()).width);
+            line = word + ' ';
+        } else {
+            line = testLine;
         }
+    }
+    if (line.trim() !== '') {
+        lines.push(line.trim());
+        maxLineWidth = Math.max(maxLineWidth, context.measureText(line.trim()).width);
+    }
+
+    // Calculate total height
+    const totalHeight = Math.min(lines.length * lineHeight, maxHeight);
+
+    // Draw lines, respecting maxHeight
+    for (let i = 0; i < lines.length; i++) {
+        if (y + (i * lineHeight) + lineHeight <= y + maxHeight) {
+            context.fillText(lines[i], x, y + (i * lineHeight));
+        } else {
+            break; // Stop drawing if text exceeds maxHeight
+        }
+    }
+
+    // Return text dimensions
+    return {
+        width: maxLineWidth,
+        height: totalHeight,
+        lines: lines
+    };
+}
 
         // Download comic as PNG
         function downloadComic() {
